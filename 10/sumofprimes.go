@@ -1,10 +1,6 @@
 /*
-
-
-By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13, we can see that the 6th prime is 13.
-
-What is the 10 001st prime number?
-
+The sum of the primes below 10 is 2 + 3 + 5 + 7 = 17.
+Find the sum of all the primes below two million.
 */
 package main
 
@@ -14,21 +10,18 @@ import (
 )
 
 func main() {
-	count := 0
-	for i := 2; i < 1<<31-1; i++ {
+
+	sum := 0
+	for i := 2; i < 2000000; i++ {
 		if isprime(i) {
-			count++
-			if count == 10001 {
-				fmt.Println(i)
-				return
-			}
+			sum = sum + i
 		}
 	}
+	fmt.Println(sum)
 
 }
 
 func isprime(num int) bool {
-	prime := true
 	if num == 2 {
 		return true
 	}
@@ -44,9 +37,8 @@ func isprime(num int) bool {
 
 	for j := 2; j <= int(math.Sqrt(float64(num))); j++ {
 		if num%j == 0 {
-			prime = false
-			return prime
+			return false
 		}
 	}
-	return prime
+	return true
 }
