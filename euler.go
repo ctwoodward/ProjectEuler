@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"math"
 	"math/big"
+	"os"
 	"reflect"
 	"strconv"
 	"time"
@@ -16,7 +18,7 @@ func main() {
 		"1": Problem1, "2": Problem2, "3": Problem3, "4": Problem4,
 		"5": Problem5, "6": Problem6, "7": Problem7, "8": Problem8,
 		"9": Problem9, "10": Problem10, "11": Problem11, "12": Problem12,
-		"13": Problem13, "14": Problem14, "15": Problem15}
+		"13": Problem13, "14": Problem14, "15": Problem15, "16": Problem16}
 	for {
 		var choice string
 		fmt.Println("Which project would you like to run?")
@@ -512,10 +514,21 @@ func problem12NumDivisors(num int) (div int) {
 /*Problem13 Copy and paste the below above here and rename the function
  */
 func Problem13() {
+	sum := big.NewInt(0)
+	line := big.NewInt(0)
+	inFile, _ := os.Open("problem13data.txt")
+	defer inFile.Close()
+	scanner := bufio.NewScanner(inFile)
+	scanner.Split(bufio.ScanLines)
 	t := time.Now()
-	//Do work
+	for scanner.Scan() {
+		line.SetString(scanner.Text(), 10)
+		sum.Add(sum, line)
+		//fmt.Println(scanner.Text())
+	}
 	d := time.Since(t)
 	fmt.Println("Completed in ", d.Seconds(), "seconds")
+	fmt.Println(sum)
 }
 
 /*Problem14 The following iterative sequence is defined for the set of positive
@@ -579,6 +592,27 @@ func Problem15() {
 	d := time.Since(t)
 	fmt.Println("Completed in ", d.Seconds(), "seconds")
 	fmt.Println(answer)
+}
+
+/*Problem16 2^15 = 32768 and the sum of its digits is 3 + 2 + 7 + 6 + 8 = 26.
+What is the sum of the digits of the number 2^1000?
+*/
+func Problem16() {
+	two := big.NewInt(2)
+	thousand := big.NewInt(1000)
+	powerSum := big.NewInt(0)
+	t := time.Now()
+	powerSum.Exp(two, thousand, powerSum)
+	digits := powerSum.String()
+	sum := 0
+	for i := 0; i < len(digits); i++ {
+		temp := rune(digits[i])
+		sum += (int(temp) - '0')
+		//sum + strconv.Atoi(strconv.QuoteRune(temp))
+	}
+	d := time.Since(t)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+	fmt.Println(sum)
 }
 
 /*ProblemXX Copy and paste the below above here and rename the function
