@@ -2,8 +2,11 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"io"
+	"log"
 	"math"
 	"math/big"
 	"os"
@@ -18,10 +21,11 @@ func main() {
 		"1": Problem1, "2": Problem2, "3": Problem3, "4": Problem4,
 		"5": Problem5, "6": Problem6, "7": Problem7, "8": Problem8,
 		"9": Problem9, "10": Problem10, "11": Problem11, "12": Problem12,
-		"13": Problem13, "14": Problem14, "15": Problem15, "16": Problem16}
+		"13": Problem13, "14": Problem14, "15": Problem15, "16": Problem16,
+		"18": Problem18}
 	for {
 		var choice string
-		fmt.Println("Which project would you like to run?")
+		fmt.Println("Which project would you like to run? [1-16,18], 0 for quit")
 		fmt.Scanln(&choice)
 		if choice == "0" {
 			break
@@ -608,16 +612,119 @@ func Problem16() {
 	for i := 0; i < len(digits); i++ {
 		temp := rune(digits[i])
 		sum += (int(temp) - '0')
-		//sum + strconv.Atoi(strconv.QuoteRune(temp))
 	}
 	d := time.Since(t)
 	fmt.Println("Completed in ", d.Seconds(), "seconds")
 	fmt.Println(sum)
 }
 
+/*Problem18 is defined as...
+By starting at the top of the triangle below and moving to adjacent numbers on the row below, the maximum total from top to bottom is 23.
+
+3
+7 4
+2 4 6
+8 5 9 3
+
+That is, 3 + 7 + 4 + 9 = 23.
+
+Find the maximum total from top to bottom of the triangle below:
+
+75
+95 64
+17 47 82
+18 35 87 10
+20 04 82 47 65
+19 01 23 75 03 34
+88 02 77 73 07 63 67
+99 65 04 28 06 16 70 92
+41 41 26 56 83 40 80 70 33
+41 48 72 33 47 32 37 16 94 29
+53 71 44 65 25 43 91 52 97 51 14
+70 11 33 28 77 73 17 78 39 68 17 57
+91 71 52 38 17 14 91 43 58 50 27 29 48
+63 66 04 68 89 53 67 30 73 16 69 87 40 31
+04 62 98 27 23 09 70 98 73 93 38 53 60 04 23
+
+NOTE: As there are only 16384 routes, it is possible to solve this problem by trying every route. However, Problem 67, is the same challenge with a triangle containing one-hundred rows; it cannot be solved by brute force, and requires a clever method! ;o)
+*/
+func Problem18() {
+	//do problem setup here
+	lines := make([][]int, 15)
+	c := make(chan int, len(lines))
+	inFile, _ := os.Open("problem18data.csv")
+	max := 0
+	defer inFile.Close()
+	csvReader := csv.NewReader(bufio.NewReader(inFile))
+	csvReader.FieldsPerRecord = -1 //Allows csv file to have variable record lengths
+	i := 0
+	for {
+		line, err := csvReader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		//fmt.Println(line)
+		for j := 0; j < len(line); j++ {
+			lines[i] = make([]int, len(line))
+			num, err := strconv.Atoi(line[j])
+			if err != nil {
+				fmt.Println(err)
+			}
+			lines[i][j] = num
+		}
+		i++
+	}
+	t := time.Now()
+	for j := 0; j < len(lines[i-1]); j++ {
+		problem18Sum(lines, i-1, j, 0, c)
+	}
+	count := 0
+	for {
+		num := <-c
+		if num > max {
+			max = num
+
+		}
+		count++
+		if count >= 16384 {
+			fmt.Println(max)
+			break
+		}
+
+	}
+	d := time.Since(t)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+}
+func problem18Sum(tree [][]int, i, j, sumSoFar int, c chan int) {
+	sumSoFar = sumSoFar + tree[i][j]
+	if i == 0 { //made the top of the tree
+		c <- sumSoFar
+		return
+	}
+	if i == 1 { //only call once for row 0
+		go problem18Sum(tree, i-1, 0, sumSoFar, c)
+		return
+	}
+	if i == j { //we're at the right side, only call row above index -1
+		go problem18Sum(tree, i-1, j-1, sumSoFar, c)
+		return
+	}
+	if j == 0 { //we're at the left side, only call row above
+		go problem18Sum(tree, i-1, j, sumSoFar, c)
+		return
+	}
+	//somewhere in teh middle of the row, call the one above and to the side
+	go problem18Sum(tree, i-1, j, sumSoFar, c)
+	go problem18Sum(tree, i-1, j-1, sumSoFar, c)
+}
+
 /*ProblemXX Copy and paste the below above here and rename the function
  */
 func ProblemXX() {
+	//do problem setup here
 	t := time.Now()
 	//Do work
 	d := time.Since(t)
@@ -633,6 +740,7 @@ func reverseString(s string) string {
 	return string(r)
 }
 
+//isPrime is my fastest way to find if a number is prime
 func isPrime(num int) bool {
 	prime := true
 	if num == 2 {
@@ -656,3 +764,5 @@ func isPrime(num int) bool {
 	}
 	return prime
 }
+
+//reusable data types and related Functions
