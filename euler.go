@@ -22,10 +22,10 @@ func main() {
 		"5": Problem5, "6": Problem6, "7": Problem7, "8": Problem8,
 		"9": Problem9, "10": Problem10, "11": Problem11, "12": Problem12,
 		"13": Problem13, "14": Problem14, "15": Problem15, "16": Problem16,
-		"18": Problem18}
+		"18": Problem18, "67": Problem67}
 	for {
 		var choice string
-		fmt.Println("Which project would you like to run? [1-16,18], 0 for quit")
+		fmt.Println("Which project would you like to run? [1-16,18,67], 0 for quit")
 		fmt.Scanln(&choice)
 		if choice == "0" {
 			break
@@ -667,8 +667,8 @@ func Problem18() {
 			log.Fatal(err)
 		}
 		//fmt.Println(line)
+		lines[i] = make([]int, len(line))
 		for j := 0; j < len(line); j++ {
-			lines[i] = make([]int, len(line))
 			num, err := strconv.Atoi(line[j])
 			if err != nil {
 				fmt.Println(err)
@@ -716,9 +716,86 @@ func problem18Sum(tree [][]int, i, j, sumSoFar int, c chan int) {
 		go problem18Sum(tree, i-1, j, sumSoFar, c)
 		return
 	}
-	//somewhere in teh middle of the row, call the one above and to the side
+	//somewhere in the middle of the row, call the one above and to the side
 	go problem18Sum(tree, i-1, j, sumSoFar, c)
 	go problem18Sum(tree, i-1, j-1, sumSoFar, c)
+}
+
+/*Problem67 Copy and paste the below above here and rename the function
+ */
+func Problem67() {
+	//do problem setup here
+	lines := make([][]int, 100)
+	c := make(chan int, len(lines))
+	inFile, _ := os.Open("problem67data.csv")
+	max := 0
+	defer inFile.Close()
+	csvReader := csv.NewReader(bufio.NewReader(inFile))
+	csvReader.FieldsPerRecord = -1 //Allows csv file to have variable record lengths
+	i := 0
+	for {
+		line, err := csvReader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		//fmt.Println(line)
+		lines[i] = make([]int, len(line))
+		for j := 0; j < len(line); j++ {
+			num, err := strconv.Atoi(line[j])
+			if err != nil {
+				fmt.Println(err)
+			}
+			lines[i][j] = num
+		}
+		i++
+	}
+	fmt.Println("Beginning Tree Traverse")
+	t := time.Now()
+	for j := 0; j < len(lines[i-1]); j++ {
+		problem18Sum(lines, i-1, j, 0, c)
+	}
+	count := 0
+	for {
+		num := <-c
+		if num > max {
+			max = num
+		}
+		count++
+		if count >= 1638400 {
+			fmt.Println(max)
+			break
+		}
+
+	}
+	d := time.Since(t)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+}
+func problem67Sum(tree [][]int, i, j, sumSoFar int, c chan int) {
+	sumSoFar = sumSoFar + tree[i][j]
+	if i == 0 { //made the top of the tree
+		c <- sumSoFar
+		return
+	}
+	if i == 1 { //only call once for row 0
+		go problem67Sum(tree, i-1, 0, sumSoFar, c)
+		return
+	}
+	if i == j { //we're at the right side, only call row above index -1
+		go problem67Sum(tree, i-1, j-1, sumSoFar, c)
+		return
+	}
+	if j == 0 { //we're at the left side, only call row above
+		go problem67Sum(tree, i-1, j, sumSoFar, c)
+		return
+	}
+	if tree[i-1][j] > tree[i-1][j-1] {
+		go problem67Sum(tree, i-1, j, sumSoFar, c)
+	} else {
+		go problem67Sum(tree, i-1, j-1, sumSoFar, c)
+	}
 }
 
 /*ProblemXX Copy and paste the below above here and rename the function
