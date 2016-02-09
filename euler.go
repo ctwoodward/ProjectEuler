@@ -11,11 +11,14 @@ import (
 	"math/big"
 	"os"
 	"reflect"
+	"runtime"
+	"runtime/debug"
 	"strconv"
 	"time"
 )
 
 func main() {
+	//	runtime.GOMAXPROCS(runtime.NumCPU())
 	//will take input in the form of project numbers and run the code associated with that project.
 	funcs := map[string]interface{}{
 		"1": Problem1, "2": Problem2, "3": Problem3, "4": Problem4,
@@ -24,7 +27,9 @@ func main() {
 		"13": Problem13, "14": Problem14, "15": Problem15, "16": Problem16,
 		"18": Problem18, "67": Problem67}
 	for {
+
 		var choice string
+		fmt.Println("Working on a maximum of ", runtime.GOMAXPROCS(0), " CPUs")
 		fmt.Println("Which project would you like to run? [1-16,18,67], 0 for quit")
 		fmt.Scanln(&choice)
 		if choice == "0" {
@@ -723,10 +728,15 @@ func problem18Sum(tree [][]int, i, j, sumSoFar int, c chan int) {
 
 /*Problem67 Copy and paste the below above here and rename the function
  */
+var problem67lines [][]int
+var problem67wg uint64
+
+//Problem67 is a broken solution for #67
 func Problem67() {
 	//do problem setup here
-	lines := make([][]int, 100)
-	c := make(chan int, len(lines))
+	problem67wg = 0
+	problem67lines = make([][]int, 100)
+	c := make(chan int, 32000)
 	inFile, _ := os.Open("problem67data.csv")
 	max := 0
 	defer inFile.Close()
@@ -742,29 +752,35 @@ func Problem67() {
 			log.Fatal(err)
 		}
 		//fmt.Println(line)
-		lines[i] = make([]int, len(line))
+		problem67lines[i] = make([]int, len(line))
 		for j := 0; j < len(line); j++ {
 			num, err := strconv.Atoi(line[j])
 			if err != nil {
 				fmt.Println(err)
 			}
-			lines[i][j] = num
+			problem67lines[i][j] = num
 		}
 		i++
 	}
 	fmt.Println("Beginning Tree Traverse")
 	t := time.Now()
-	for j := 0; j < len(lines[i-1]); j++ {
-		problem18Sum(lines, i-1, j, 0, c)
+	for j := 0; j < len(problem67lines[i-1]); j++ {
+		problem67wg++
+		go problem67Sum(i-1, j, 0, c)
 	}
-	count := 0
+	//	go problem67Sum(i-1, 50, 0, c) //temp for debug
+	fmt.Println("Done, created ", problem67wg, " Go Routines")
 	for {
 		num := <-c
+		problem67wg--
+		debug.FreeOSMemory()
+
 		if num > max {
 			max = num
+			fmt.Println(max, ", with this many go routines: ", problem67wg)
 		}
-		count++
-		if count >= 1638400 {
+
+		if problem67wg == 0 {
 			fmt.Println(max)
 			break
 		}
@@ -773,29 +789,36 @@ func Problem67() {
 	d := time.Since(t)
 	fmt.Println("Completed in ", d.Seconds(), "seconds")
 }
-func problem67Sum(tree [][]int, i, j, sumSoFar int, c chan int) {
-	sumSoFar = sumSoFar + tree[i][j]
-	if i == 0 { //made the top of the tree
+func problem67Sum(i, j, sumSoFar int, c chan<- int) {
+
+	sumSoFar = sumSoFar + problem67lines[i][j] // add our current value to the one from below
+	if i == 0 {                                //made the top of the tree
 		c <- sumSoFar
 		return
 	}
 	if i == 1 { //only call once for row 0
-		go problem67Sum(tree, i-1, 0, sumSoFar, c)
+		problem67wg++
+		go problem67Sum(i-1, 0, sumSoFar, c)
 		return
 	}
 	if i == j { //we're at the right side, only call row above index -1
-		go problem67Sum(tree, i-1, j-1, sumSoFar, c)
+		problem67wg++
+		go problem67Sum(i-1, j-1, sumSoFar, c)
 		return
 	}
 	if j == 0 { //we're at the left side, only call row above
-		go problem67Sum(tree, i-1, j, sumSoFar, c)
+		problem67wg++
+		go problem67Sum(i-1, j, sumSoFar, c)
 		return
 	}
-	if tree[i-1][j] > tree[i-1][j-1] {
-		go problem67Sum(tree, i-1, j, sumSoFar, c)
-	} else {
-		go problem67Sum(tree, i-1, j-1, sumSoFar, c)
-	}
+	//if problem67lines[i-1][j] > problem67lines[i-1][j-1] {
+	//return
+	//}
+	problem67wg++
+	go problem67Sum(i-1, j, sumSoFar, c)
+	problem67wg++
+	go problem67Sum(i-1, j-1, sumSoFar, c)
+
 }
 
 /*ProblemXX Copy and paste the below above here and rename the function
