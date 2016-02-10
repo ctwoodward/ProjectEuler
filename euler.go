@@ -12,7 +12,6 @@ import (
 	"os"
 	"reflect"
 	"runtime"
-	"runtime/debug"
 	"strconv"
 	"time"
 )
@@ -25,12 +24,14 @@ func main() {
 		"5": Problem5, "6": Problem6, "7": Problem7, "8": Problem8,
 		"9": Problem9, "10": Problem10, "11": Problem11, "12": Problem12,
 		"13": Problem13, "14": Problem14, "15": Problem15, "16": Problem16,
-		"18": Problem18, "67": Problem67}
+		"17": Problem17, "18": Problem18, "19": Problem19, "20": Problem20,
+		"67": Problem67}
+	fmt.Println("Working on a maximum of ", runtime.GOMAXPROCS(0), " CPUs")
 	for {
 
 		var choice string
-		fmt.Println("Working on a maximum of ", runtime.GOMAXPROCS(0), " CPUs")
-		fmt.Println("Which project would you like to run? [1-16,18,67], 0 for quit")
+
+		fmt.Println("Which project would you like to run? [1-20,67], 0 for quit")
 		fmt.Scanln(&choice)
 		if choice == "0" {
 			break
@@ -581,7 +582,7 @@ func Problem14() {
 }
 
 /*Problem15 Starting in the top left corner of a 2×2 grid, and only being able
-to move to the right and down, there are exactly 6 routes to theum := bottom
+to move to the right and down, there are exactly 6 routes to the bottom
 right corner. How many such routes are there through a 20×20 grid?
 */
 func Problem15() {
@@ -623,36 +624,104 @@ func Problem16() {
 	fmt.Println(sum)
 }
 
+/*Problem17 is a pain in the ass
+If the numbers 1 to 5 are written out in words: one, two, three, four, five, then there are 3 + 3 + 5 + 4 + 4 = 19 letters used in total.
+If all the numbers from 1 to 1000 (one thousand) inclusive were written out in words, how many letters would be used?
+NOTE: Do not count spaces or hyphens. For example, 342 (three hundred and forty-two) contains 23 letters and 115 (one hundred and fifteen) contains 20 letters. The use of "and" when writing out numbers is in compliance with British usage.
+My solution is a terrible way to do this.
+*/
+func Problem17() {
+	m := map[int]string{
+		1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven",
+		8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve",
+		13: "thirteen", 14: "fourteen", 15: "fifteen", 16: "sixteen",
+		17: "seventeen", 18: "eighteen", 19: "nineteen", 20: "twenty",
+		30: "thirty", 40: "forty", 50: "fifty", 60: "sixty", 70: "seventy",
+		80: "eighty", 90: "ninety",
+		100: "onehundredand", 200: "twohundredand", 300: "threehundredand", 400: "fourhundredand",
+		500: "fivehundredand", 600: "sixhundredand", 700: "sevenhundredand", 800: "eighthundredand",
+		900: "ninehundredand", 1000: "onethousand"}
+	l := 0
+	s := ""
+	//do problem setup here
+	t := time.Now()
+	for i := 1; i < 1001; i++ {
+		if i == 1000 {
+			l = l + len(m[i])
+			fmt.Println(m[i])
+			continue
+		}
+		if i > 9 && i < 20 {
+			l = l + len(m[i])
+			fmt.Println(m[i])
+			continue
+		}
+		//Convert to String
+		s = strconv.Itoa(i)
+		if len(s) == 3 {
+			if i%100 == 0 {
+				l = l - 3
+			}
+			n, _ := strconv.Atoi(string(s[0]))
+			l = l + len(m[n*100])
+			fmt.Print(m[n*100])
+			if i%100 < 20 {
+				l = l + len(m[i%100])
+				fmt.Println(m[i%100])
+				continue
+			}
+			if string(s[1]) != "0" {
+				n, _ = strconv.Atoi(string(s[1]))
+				l = l + len(m[n*10])
+				fmt.Print(m[n*10])
+			}
+			if string(s[2]) != "0" {
+				n, _ = strconv.Atoi(string(s[2]))
+				l = l + len(m[n])
+				fmt.Println(m[n])
+			} else {
+				fmt.Println("")
+			}
+			continue
+		}
+		if len(s) == 2 {
+
+			n, _ := strconv.Atoi(string(s[0]))
+			l = l + len(m[n*10])
+			fmt.Print(m[n*10])
+			if string(s[1]) != "0" {
+				n, _ = strconv.Atoi(string(s[1]))
+				l = l + len(m[n])
+				fmt.Println(m[n])
+			} else {
+				fmt.Println("")
+			}
+			continue
+		}
+		n, _ := strconv.Atoi(string(s[0]))
+		l = l + len(m[n])
+		//fmt.Println(m[n], " = ", len(m[n]), "l = ", l)
+		fmt.Println(m[n])
+	}
+	d := time.Since(t)
+	fmt.Println("\n", l)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+}
+
 /*Problem18 is defined as...
 By starting at the top of the triangle below and moving to adjacent numbers on the row below, the maximum total from top to bottom is 23.
-
 3
 7 4
 2 4 6
 8 5 9 3
-
 That is, 3 + 7 + 4 + 9 = 23.
-
 Find the maximum total from top to bottom of the triangle below:
 
-75
-95 64
-17 47 82
-18 35 87 10
-20 04 82 47 65
-19 01 23 75 03 34
-88 02 77 73 07 63 67
-99 65 04 28 06 16 70 92
-41 41 26 56 83 40 80 70 33
-41 48 72 33 47 32 37 16 94 29
-53 71 44 65 25 43 91 52 97 51 14
-70 11 33 28 77 73 17 78 39 68 17 57
-91 71 52 38 17 14 91 43 58 50 27 29 48
-63 66 04 68 89 53 67 30 73 16 69 87 40 31
-04 62 98 27 23 09 70 98 73 93 38 53 60 04 23
-
-NOTE: As there are only 16384 routes, it is possible to solve this problem by trying every route. However, Problem 67, is the same challenge with a triangle containing one-hundred rows; it cannot be solved by brute force, and requires a clever method! ;o)
-*/
+NOTE: As there are only 16384 routes, it is possible to solve this problem by
+trying every route. However, Problem 67, is the same challenge with a triangle
+containing one-hundred rows; it cannot be solved by brute force, and requires a
+clever method! ;o)
+my NOTE: I brute forced this one, screw #67 for now*/
 func Problem18() {
 	//do problem setup here
 	lines := make([][]int, 15)
@@ -726,19 +795,81 @@ func problem18Sum(tree [][]int, i, j, sumSoFar int, c chan int) {
 	go problem18Sum(tree, i-1, j-1, sumSoFar, c)
 }
 
+/*Problem19 is defined as:
+You are given the following information, but you may prefer to do some research for yourself.
+
+    1 Jan 1900 was a Monday.
+    Thirty days has September,
+    April, June and November.
+    All the rest have thirty-one,
+    Saving February alone,
+    Which has twenty-eight, rain or shine.
+    And on leap years, twenty-nine.
+    A leap year occurs on any year evenly divisible by 4, but not on a century unless it is divisible by 400.
+
+How many Sundays fell on the first of the month during the twentieth century (1 Jan 1901 to 31 Dec 2000)?
+
+Doing some searching on date math apparently the Gaussian formula for day of the week is easy math.
+*/
+func Problem19() {
+	num := 0
+	t := time.Now()
+	for year := 1901; year < 2001; year++ {
+		for month := 1; month < 13; month++ {
+			if problem19DayOfTheWeek(year, month, 1) == 0 {
+				num++
+			}
+		}
+	}
+	d := time.Since(t)
+	fmt.Println(num)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+}
+
+func problem19DayOfTheWeek(year, month, day int) int {
+	d := day
+	m := (month-1)%12 + 1
+	Y := 0
+	if m > 10 {
+		Y = year - 1
+	} else {
+		Y = year
+	}
+	y := Y % 100
+	c := (Y - (Y % 100)) / 100
+	w := (d + int(math.Floor(float64(2.6)*float64(m)-float64(0.2))) + y + int(math.Floor(float64(y/4))) + int(math.Floor(float64(c/4))) - 2*c) % 7
+	return w
+}
+
+/*Problem20 is described as
+n! means n × (n − 1) × ... × 3 × 2 × 1
+For example, 10! = 10 × 9 × ... × 3 × 2 × 1 = 3628800,
+and the sum of the digits in the number 10! is 3 + 6 + 2 + 8 + 8 + 0 + 0 = 27.
+Find the sum of the digits in the number 100!
+ProblemXX Copy and paste the below above here and rename the function
+*/
+func Problem20() {
+	//do problem setup here
+	//This is a Schröder Sequence (2n)!/(n!)^2
+	bigNum := big.NewInt(0)
+	num := 0
+	t := time.Now()
+	bigNum.MulRange(1, 100)
+	s := bigNum.String()
+	for i := 0; i < len(s); i++ {
+		n, _ := strconv.Atoi(string(s[i]))
+		num = num + n
+	}
+	d := time.Since(t)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+	fmt.Println(num)
+}
+
 /*Problem67 Copy and paste the below above here and rename the function
  */
-var problem67lines [][]int
-var problem67wg uint64
-
-//Problem67 is a broken solution for #67
 func Problem67() {
-	//do problem setup here
-	problem67wg = 0
-	problem67lines = make([][]int, 100)
-	c := make(chan int, 32000)
+	lines := make([][]int, 100)
 	inFile, _ := os.Open("problem67data.csv")
-	max := 0
 	defer inFile.Close()
 	csvReader := csv.NewReader(bufio.NewReader(inFile))
 	csvReader.FieldsPerRecord = -1 //Allows csv file to have variable record lengths
@@ -751,74 +882,31 @@ func Problem67() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		//fmt.Println(line)
-		problem67lines[i] = make([]int, len(line))
+		lines[i] = make([]int, len(line))
 		for j := 0; j < len(line); j++ {
 			num, err := strconv.Atoi(line[j])
 			if err != nil {
 				fmt.Println(err)
 			}
-			problem67lines[i][j] = num
+			lines[i][j] = num
 		}
 		i++
 	}
-	fmt.Println("Beginning Tree Traverse")
 	t := time.Now()
-	for j := 0; j < len(problem67lines[i-1]); j++ {
-		problem67wg++
-		go problem67Sum(i-1, j, 0, c)
-	}
-	//	go problem67Sum(i-1, 50, 0, c) //temp for debug
-	fmt.Println("Done, created ", problem67wg, " Go Routines")
-	for {
-		num := <-c
-		problem67wg--
-		debug.FreeOSMemory()
 
-		if num > max {
-			max = num
-			fmt.Println(max, ", with this many go routines: ", problem67wg)
+	for i = i - 1; i >= 0; i-- { //work bottom to top
+		for j := 0; j < i; j++ {
+			if (lines[i][j] + lines[i-1][j]) > (lines[i][j+1] + lines[i-1][j]) {
+				lines[i-1][j] = lines[i][j] + lines[i-1][j]
+			} else {
+				lines[i-1][j] = lines[i][j+1] + lines[i-1][j]
+			}
 		}
-
-		if problem67wg == 0 {
-			fmt.Println(max)
-			break
-		}
-
 	}
+	fmt.Println(lines[0][0])
+
 	d := time.Since(t)
 	fmt.Println("Completed in ", d.Seconds(), "seconds")
-}
-func problem67Sum(i, j, sumSoFar int, c chan<- int) {
-
-	sumSoFar = sumSoFar + problem67lines[i][j] // add our current value to the one from below
-	if i == 0 {                                //made the top of the tree
-		c <- sumSoFar
-		return
-	}
-	if i == 1 { //only call once for row 0
-		problem67wg++
-		go problem67Sum(i-1, 0, sumSoFar, c)
-		return
-	}
-	if i == j { //we're at the right side, only call row above index -1
-		problem67wg++
-		go problem67Sum(i-1, j-1, sumSoFar, c)
-		return
-	}
-	if j == 0 { //we're at the left side, only call row above
-		problem67wg++
-		go problem67Sum(i-1, j, sumSoFar, c)
-		return
-	}
-	//if problem67lines[i-1][j] > problem67lines[i-1][j-1] {
-	//return
-	//}
-	problem67wg++
-	go problem67Sum(i-1, j, sumSoFar, c)
-	problem67wg++
-	go problem67Sum(i-1, j-1, sumSoFar, c)
-
 }
 
 /*ProblemXX Copy and paste the below above here and rename the function
@@ -864,5 +952,3 @@ func isPrime(num int) bool {
 	}
 	return prime
 }
-
-//reusable data types and related Functions
