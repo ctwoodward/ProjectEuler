@@ -25,13 +25,13 @@ func main() {
 		"9": Problem9, "10": Problem10, "11": Problem11, "12": Problem12,
 		"13": Problem13, "14": Problem14, "15": Problem15, "16": Problem16,
 		"17": Problem17, "18": Problem18, "19": Problem19, "20": Problem20,
-		"67": Problem67}
+		"21": Problem21, "22": Problem22, "23": Problem23, "67": Problem67}
 	fmt.Println("Working on a maximum of ", runtime.GOMAXPROCS(0), " CPUs")
 	for {
 
 		var choice string
 
-		fmt.Println("Which project would you like to run? [1-20,67], 0 for quit")
+		fmt.Println("Which project would you like to run? [1-23,67], 0 for quit")
 		fmt.Scanln(&choice)
 		if choice == "0" {
 			break
@@ -863,6 +863,166 @@ func Problem20() {
 	d := time.Since(t)
 	fmt.Println("Completed in ", d.Seconds(), "seconds")
 	fmt.Println(num)
+}
+
+/*Problem21 is defined as
+
+
+Let d(n) be defined as the sum of proper divisors of n (numbers less than n
+which divide evenly into n).
+If d(a) = b and d(b) = a, where a ≠ b, then a and b are an amicable pair and
+each of a and b are called amicable numbers.
+
+For example, the proper divisors of 220 are 1, 2, 4, 5, 10, 11, 20, 22, 44, 55
+and 110; therefore d(220) = 284. The proper divisors of 284 are 1, 2, 4, 71 and
+142; so d(284) = 220.
+
+Evaluate the sum of all the amicable numbers under 10000.
+*/
+func Problem21() {
+	//do problem setup here
+	//list := make([]int, 10000) //assume all numbers are amicable and make
+	num := 0
+	t := time.Now()
+	for i := 1; i < 10001; i++ {
+		if problem21IsAmicable(i) {
+			num = num + i
+		}
+	}
+	d := time.Since(t)
+	fmt.Println(num)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+}
+func problem21SumDiv(num int) int {
+	sum := 1
+	for j := 2; j <= int(num/2); j++ {
+		if num%j == 0 {
+			sum = sum + j
+		}
+	}
+	return sum
+}
+func problem21IsAmicable(num int) bool {
+	sum := problem21SumDiv(num)
+	if num != sum {
+		aSum := problem21SumDiv(sum)
+		if aSum == num {
+			fmt.Println(num, "'s divisor sum is ", sum, "'s divisor sum is ", aSum)
+			return true
+		}
+	} else {
+		fmt.Println(num, "'s divisor sum is ", sum, "!!!")
+	}
+	return false
+}
+
+/*Problem22 is defined as
+Using names.txt (right click and 'Save Link/Target As...'), a 46K text file
+containing over five-thousand first names, begin by sorting it into alphabetical
+order. Then working out the alphabetical value for each name, multiply this
+value by its alphabetical position in the list to obtain a name score.
+For example, when the list is sorted into alphabetical order, COLIN, which is
+worth 3 + 15 + 12 + 9 + 14 = 53, is the 938th name in the list. So, COLIN would
+obtain a score of 938 × 53 = 49714.
+What is the total of all the name scores in the file?
+
+NOTE:I pre-sorted the file since it's easier to do in another application than
+resort it each time.
+*/
+func Problem22() {
+	//do problem setup here
+	m := map[string]int{"A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6, "G": 7, "H": 8, "I": 9,
+		"J": 10, "K": 11, "L": 12, "M": 13, "N": 14, "O": 15, "P": 16, "Q": 17, "R": 18, "S": 19,
+		"T": 20, "U": 21, "V": 22, "W": 23, "X": 24, "Y": 25, "Z": 26}
+	//	names := make([]string, 5163)
+	inFile, _ := os.Open("problem22_names-sorted.csv")
+	defer inFile.Close()
+	csvReader := csv.NewReader(bufio.NewReader(inFile))
+	csvReader.FieldsPerRecord = 1
+	sum := 0
+	i := 1
+	t := time.Now()
+	for {
+		name, err := csvReader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		nameSum := 0
+		for j := 0; j < len(name[0]); j++ {
+			nameSum = nameSum + m[string(name[0][j])]
+		}
+		sum = sum + i*nameSum
+		i++
+	}
+	d := time.Since(t)
+	fmt.Println(sum)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+
+}
+
+/*Problem23 is
+A perfect number is a number for which the sum of its proper divisors is exactly
+equal to the number. For example, the sum of the proper divisors of 28 would be
+1 + 2 + 4 + 7 + 14 = 28, which means that 28 is a perfect number.
+A number n is called deficient if the sum of its proper divisors is less than n
+and it is called abundant if this sum exceeds n.
+As 12 is the smallest abundant number, 1 + 2 + 3 + 4 + 6 = 16, the smallest
+number that can be written as the sum of two abundant numbers is 24.
+By mathematical analysis, it can be shown that all integers greater than 28123
+can be written as the sum of two abundant numbers. However, this upper limit
+cannot be reduced any further by analysis even though it is known that the
+greatest number that cannot be expressed as the sum of two abundant numbers is
+less than this limit.
+Find the sum of all the positive integers which cannot be written as the sum of
+two abundant numbers.
+*/
+func Problem23() {
+	//do problem setup here
+	list := make([]int, 6966)
+	count := 0
+	sum := 0
+	t := time.Now()
+	for i := 12; i < 28124; i++ {
+		if problem23IsAbundant(i) {
+			//	fmt.Println(i)
+			list[count] = i
+			count++
+		}
+	}
+	fmt.Println("found ", count)
+	//how to find out if a number is the sum of two items in a list...
+I:
+	for i := 1; i < 28124; i++ {
+		for j := 0; j < count; i++ {
+			for k := 0; k < count; k++ {
+				if i < list[0] { //quickly pick out the small numbers
+					sum = sum + i
+					continue I
+				}
+				if i == (list[j] + list[k]) { //if we find a matching sum then stop
+					continue I
+				}
+				if i < (list[j] + list[k]) { //if the sum is larger than the target and it didn't match it's valid
+					sum = sum + i
+					continue I
+				}
+			}
+		}
+	}
+
+	d := time.Since(t)
+	fmt.Println(sum)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+}
+func problem23IsAbundant(num int) bool {
+	sum := problem21SumDiv(num)
+	if num < sum {
+		return true
+	}
+	return false
 }
 
 /*Problem67 Copy and paste the below above here and rename the function
