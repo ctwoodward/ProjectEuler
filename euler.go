@@ -17,7 +17,6 @@ import (
 )
 
 func main() {
-	//	runtime.GOMAXPROCS(runtime.NumCPU())
 	//will take input in the form of project numbers and run the code associated with that project.
 	funcs := map[string]interface{}{
 		"1": Problem1, "2": Problem2, "3": Problem3, "4": Problem4,
@@ -25,13 +24,12 @@ func main() {
 		"9": Problem9, "10": Problem10, "11": Problem11, "12": Problem12,
 		"13": Problem13, "14": Problem14, "15": Problem15, "16": Problem16,
 		"17": Problem17, "18": Problem18, "19": Problem19, "20": Problem20,
-		"21": Problem21, "22": Problem22, "23": Problem23, "67": Problem67}
+		"21": Problem21, "22": Problem22, "23": Problem23, "24": Problem24,
+		"25": Problem25, "26": Problem26, "67": Problem67}
 	fmt.Println("Working on a maximum of ", runtime.GOMAXPROCS(0), " CPUs")
 	for {
-
 		var choice string
-
-		fmt.Println("Which project would you like to run? [1-23,67], 0 for quit")
+		fmt.Println("Which project would you like to run? [1-26,67], 0 for quit")
 		fmt.Scanln(&choice)
 		if choice == "0" {
 			break
@@ -978,38 +976,44 @@ greatest number that cannot be expressed as the sum of two abundant numbers is
 less than this limit.
 Find the sum of all the positive integers which cannot be written as the sum of
 two abundant numbers.
+NOTE: Wolfram Alpha has a value of 20161 as the last number that can't be made
+with abundant numbers.
 */
 func Problem23() {
 	//do problem setup here
-	list := make([]int, 6966)
+	abList := make([]int, 4994)
+	numList := make(map[int]bool)
 	count := 0
 	sum := 0
+	//prime the integer list
+	for i := 1; i < 20162; i++ {
+		numList[i] = true
+	}
+
 	t := time.Now()
-	for i := 12; i < 28124; i++ {
+	for i := 12; i <= 20161; i++ {
 		if problem23IsAbundant(i) {
 			//	fmt.Println(i)
-			list[count] = i
+			abList[count] = i
 			count++
 		}
 	}
 	fmt.Println("found ", count)
-	//how to find out if a number is the sum of two items in a list...
-I:
-	for i := 1; i < 28124; i++ {
-		for j := 0; j < count; i++ {
-			for k := 0; k < count; k++ {
-				if i < list[0] { //quickly pick out the small numbers
-					sum = sum + i
-					continue I
-				}
-				if i == (list[j] + list[k]) { //if we find a matching sum then stop
-					continue I
-				}
-				if i < (list[j] + list[k]) { //if the sum is larger than the target and it didn't match it's valid
-					sum = sum + i
-					continue I
-				}
+	//now loop through the abList adding numbers and updating numList to false
+	for i := 0; i < len(abList); i++ {
+		for j := 0; j < len(abList); j++ {
+			n := abList[i] + abList[j]
+			if n < 20162 {
+				numList[n] = false
+			} else {
+				break
 			}
+		}
+	}
+	fmt.Println("finished marking")
+	for i := 1; i < 20162; i++ {
+		if numList[i] {
+			sum = sum + i
 		}
 	}
 
@@ -1023,6 +1027,148 @@ func problem23IsAbundant(num int) bool {
 		return true
 	}
 	return false
+}
+
+/*Problem24 is defined as
+A permutation is an ordered arrangement of objects. For example, 3124 is one
+possible permutation of the digits 1, 2, 3 and 4. If all of the permutations are
+listed numerically or alphabetically, we call it lexicographic order.
+The lexicographic permutations of 0, 1 and 2 are:
+012   021   102   120   201   210
+What is the millionth lexicographic permutation of the digits 0, 1, 2, 3, 4, 5, 6, 7, 8 and 9?
+
+*/
+func Problem24() {
+	nums := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	t := time.Now()
+	stop := false
+	for i := 1; i < 1000000; i++ {
+		nums, stop = problem24NextIteration(nums)
+		if !stop {
+			fmt.Println("stopped at ", i)
+			break
+		}
+	}
+	d := time.Since(t)
+	fmt.Println(nums)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+}
+func problem24NextIteration(list []int) ([]int, bool) {
+	// Find longest non-increasing suffix
+	nums := list
+	i := len(nums) - 1
+	for {
+		if i == 0 {
+			break
+		}
+		if nums[i-1] < nums[i] {
+			break
+		}
+		i--
+	}
+	if i <= 0 {
+		return list, false
+	}
+	// Let num[i - 1] be the pivot
+	// Find rightmost element that exceeds the pivot
+	j := len(nums) - 1
+	for {
+		if nums[j] > nums[i-1] {
+			break
+		}
+		j--
+	}
+	// Now the value nums[j] will become the new pivot
+	// Assertion: j >= i
+	// Swap the pivot with j
+	temp := nums[i-1]
+	nums[i-1] = nums[j]
+	nums[j] = temp
+	// Reverse the suffix
+	j = len(nums) - 1
+	for {
+		if i >= j {
+			break
+		}
+		temp = nums[i]
+		nums[i] = nums[j]
+		nums[j] = temp
+		i++
+		j--
+	}
+	// Successfully computed the next permutation
+	return nums, true
+}
+
+/*Problem25 is defined as
+The Fibonacci sequence is defined by the recurrence relation:
+    Fn = Fn−1 + Fn−2, where F1 = 1 and F2 = 1.
+Hence the first 12 terms will be:
+    F1 = 1,F2 = 1,F3 = 2,F4 = 3,F5 = 5,F6 = 8,F7 = 13,F8 = 21,F9 = 34,F10 = 55,
+    F11 = 89,F12 = 144
+The 12th term, F12, is the first term to contain three digits.
+What is the index of the first term in the Fibonacci sequence to contain 1000 digits?
+*/
+func Problem25() {
+	num := big.NewInt(1)
+	t1 := big.NewInt(1)
+	t2 := big.NewInt(1)
+	index := 2
+	t := time.Now()
+	for {
+		if index < 10 {
+			fmt.Println("before", t1.String(), "+", t2.String(), " = ", num.String())
+		}
+		num = num.Add(t1, t2)
+		if index < 10 {
+			fmt.Println("after", t1.String(), "+", t2.String(), " = ", num.String())
+		}
+		t1.Set(t2)
+		t2.Set(num)
+		index++
+		if len(num.String()) >= 1000 {
+			break
+		}
+	}
+	d := time.Since(t)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+	fmt.Println(index)
+}
+
+/*Problem26 is defined as
+A unit fraction contains 1 in the numerator. The decimal representation of the unit fractions with denominators 2 to 10 are given:
+    1/2	= 	0.5
+    1/3	= 	0.(3)
+    1/4	= 	0.25
+    1/5	= 	0.2
+    1/6	= 	0.1(6)
+    1/7	= 	0.(142857)
+    1/8	= 	0.125
+    1/9	= 	0.(1)
+    1/10	= 	0.1
+Where 0.1(6) means 0.166666..., and has a 1-digit recurring cycle. It can be seen that 1/7 has a 6-digit recurring cycle.
+Find the value of d < 1000 for which 1/d contains the longest recurring cycle in its decimal fraction part.
+*/
+func Problem26() {
+	//do problem setup here
+	t := time.Now()
+	for i := 1; i < 1000; i++ {
+		//num := float64(1.) / float64(i)
+		num := math.Mod(float64(1), float64(i))
+		fmt.Println(i, num)
+	}
+	d := time.Since(t)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
+}
+
+/*ProblemX Copy and paste the below above here and rename the function
+ */
+func ProblemX() {
+	//do problem setup here
+	t := time.Now()
+	//Do work
+	d := time.Since(t)
+	fmt.Println("Completed in ", d.Seconds(), "seconds")
 }
 
 /*Problem67 Copy and paste the below above here and rename the function
